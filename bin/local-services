@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+root_dir="$PWD"
+mysql_bin="${MYSQL_BIN_DIR:-/opt/homebrew/opt/mysql@8.4/bin}"
+redis_bin="${REDIS_BIN:-/opt/homebrew/bin/redis-server}"
+mkdir -p storage/mysql storage/redis
+if [ "${1:-start}" = stop ]; then
+  if [ -f storage/mysql/server.pid ]; then kill "$(cat storage/mysql/server.pid)"; fi
+  if [ -f storage/redis/server.pid ]; then kill "$(cat storage/redis/server.pid)"; fi
+  exit 0
+fi
+if [ ! -d storage/mysql/mysql ]; then
+  "$mysql_bin/mysqld" --no-defaults --initialize-insecure --datadir="$root_dir/storage/mysql" >storage/logs/mysql-init.log 2>&1
+fi
+if ! "$mysql_bin/mysqladmin" --no-defaults --socket="$root_dir/storage/mysql/mysql.sock" -u root ping >/dev/null 2>&1; then
+  "$mysql_bin/mysqld" --no-defaults --datadir="$root_dir/storage/mysql" --socket="$root_dir/storage/mysql/mysql.sock" --pid-file="$root_dir/storage/mysql/server.pid" --bind-address=127.0.0.1 --port=3307 --mysqlx=0 --daemonize --log-error="$root_dir/storage/logs/mysql.log"
+fi
+if ! /opt/homebrew/bin/redis-cli -p 6381 ping >/dev/null 2>&1; then
+  "$redis_bin" --bind 127.0.0.1 --port 6381 --appendonly yes --dir "$root_dir/storage/redis" --daemonize yes --pidfile "$root_dir/storage/redis/server.pid" --logfile "$root_dir/storage/logs/redis.log"
+fi
+printf 'Project-local MySQL :3307 and Redis :6381 are ready.\n'

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+pids=()
+cleanup() { for pid in "${pids[@]}"; do kill "$pid" 2>/dev/null || true; done; wait || true; }
+trap cleanup EXIT INT TERM
+./bin/php -S 127.0.0.1:9081 bin/mock-supplier.php >storage/logs/mock.log 2>&1 & pids+=("$!")
+./bin/php artisan dispatch:listen >storage/logs/listener.log 2>&1 & pids+=("$!")
+./bin/php artisan dispatch:workers >storage/logs/workers.log 2>&1 & pids+=("$!")
+./bin/serve & pids+=("$!")
+wait

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+if command -v php >/dev/null 2>&1; then exec php "$@"; fi
+if [ -x /opt/homebrew/opt/php@8.4/bin/php ]; then exec /opt/homebrew/opt/php@8.4/bin/php "$@"; fi
+printf 'PHP 8.2+ is required.\n' >&2
+exit 1

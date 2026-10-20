@@ -1,0 +1,5 @@
+@extends('layout')
+@section('title','供应商接口')
+@section('content')
+<div class="page-heading"><div><h1>供应商接口</h1><p>从供应商类选择已实现的 API 操作；模板通过接口标识引用。协议由代码维护。</p></div><a class="button primary" href="/endpoints/create">添加接口</a></div><div class="panel table-scroll"><table><thead><tr><th>接口</th><th>供应商</th><th>供应商操作 / 请求</th><th>幂等保证</th><th>配置状态</th><th></th></tr></thead><tbody>@forelse($endpoints as $e)<tr><td><strong>{{ $e->name }}</strong><small class="mono">{{ $e->id }}</small></td><td>{{ $e->provider->name }}</td><td><small class="mono">{{ $e->operation ?? '历史通用接口' }}</small><span class="method">{{ $e->method }}</span> <code>{{ $e->path }}</code></td><td>{{ ($e->options['idempotent']??false)?'目标支持幂等':'结果未知需人工核对' }}</td><td><span class="badge {{ $e->enabled?'succeeded':'waiting' }}">{{ $e->enabled?'启用':'关闭' }}</span></td><td><a href="/endpoints/{{ $e->id }}/edit">编辑</a></td></tr>@empty<tr><td colspan="6"><div class="empty">暂无接口，先添加供应商连接。</div></td></tr>@endforelse</tbody></table></div>
+@endsection
